@@ -14,25 +14,55 @@ export const signup = async (req, res, next) => {
     next(error);
   }
 };
-
 export const signin = async (req, res, next) => {
   const { email, password } = req.body;
+  console.log(email, password);
   try {
-    const validUser = await User.findOne({ email });
-    if (!validUser) return next(errorHandler(404, 'User not found'));
-    const validPassword = bcryptjs.compareSync(password, validUser.password);
-    if (!validPassword) return next(errorHandler(401, 'wrong credentials'));
-    const token = jwt.sign({ id: validUser._id }, process.env.JWT_SECRET);
-    const { password: hashedPassword, ...rest } = validUser._doc;
-    const expiryDate = new Date(Date.now() + 3600000); // 1 hour
-    res
-      .cookie('access_token', token, { httpOnly: true, expires: expiryDate })
-      .status(200)
-      .json(rest);
+    User.findOne({email}).then((validUser)=>{
+    if(validUser){
+      const validPassword = bcryptjs.compareSync(password, validUser.password);
+      if(validPassword){
+        res.status(200).json({mesage:"user loggedin"})
+      }else{
+        res.status(401).json({message:"this acc not belongs to this user"})
+      }
+    }
+    else{
+      console.log("user not found")
+      res.status(401).json({message:"this acc not belongs to this user"})
+    }
+    }).catch((error)=>{
+      console.log(error.message);
+      res.statu(404).json({message:"user not found"})
+    })
   } catch (error) {
-    next(error);
-  }
-};
+   console.log(error.message);
+   res.json(500).json({message:error.message})
+    }
+  };
+// export const signin = async (req, res, next) => {
+//   console.log('i am here')
+//   const { email, password } =req.body;
+//   try {
+   
+
+   //   const validUser = await User.findOne({ email })
+  //   if (!validUser) return next(errorHandler(404, 'User not found'));
+  //   const validPassword = bcryptjs.compareSync(password, validUser.password);
+  //   if (!validPassword) return next(errorHandler(401, 'wrong credentials'));
+  //   const token = jwt.sign({ id: validUser._id }, process.env.JWT_SECRET);
+  //   const { password: hashedPassword, ...rest } = validUser._doc;
+  //   const expiryDate = new Date(Date.now() + 3600000); // 1 hour
+  //   res
+  //     .cookie('access_token', token, { httpOnly: true, expires: expiryDate })
+  //     .status(200)
+  //     .json(rest);
+  // } catch (error) {
+  //   console.log(error.message)
+  //   // next(error);
+  //   res.status(500).json(error.message);
+  // }
+// };
 
 export const google = async (req, res, next) => {
   try {
